@@ -99,7 +99,7 @@ fn add_person() -> io::Result<()> {
 
 
     file.write_all(message.as_bytes())?;
-    println!("Message written to file.");
+    println!("Pessoa adicionada.");
     Ok(())
 }
 
@@ -162,24 +162,26 @@ fn update_data(caminho: String, novas_info: Vec<String>) -> io::Result<()> {
     for line in reader.lines() {
         match line {
             Ok(_l) => {
-                let l = _l.trim();
+                let l = _l.to_string();
                 if l.contains(novas_info[0].as_str()) {
-                    temp_file.write_all(b"\n\t")?;
                     temp_file.write_all(l.as_bytes())?;
                     cond = true;
                 }
                 if cond {
                     if l == "}" {
+                        temp_file.write_all(l.as_bytes())?;
+                        temp_file.write_all(b"\n")?;
                         println!("");
                         cond = false;
                     }
 
                     if l.contains("nome") {
-                        let nome: String = format!("\n\tnome: {{ {} }}\n}}\n", novas_info[1]);
+                        let nome: String = format!("\n\tnome: {{ {} }}\n", novas_info[1]);
                         temp_file.write_all(nome.as_bytes())?;
                     }
                 } else {
                     temp_file.write_all(l.as_bytes())?;
+                    temp_file.write_all(b"\n")?;
                 }
             } 
             Err(e) => {
