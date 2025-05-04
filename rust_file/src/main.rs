@@ -1,3 +1,4 @@
+use std::fs::rename;
 use std::io::prelude::*;
 use std::fs::File;
 use std::fs::OpenOptions;
@@ -10,12 +11,14 @@ fn main() -> io::Result<()> {
     let mut option: &str;
     let mut buffer: String = String::new();
     let caminho: String = "output.txt".to_string();
+
     loop {
         buffer.clear();
         println!("Escolha uma opção:");
         println!("1. Adicionar pessoa");
         println!("2. Buscar pessoa");
-        println!("3. Ler arquivo");
+        println!("3. Alterar dados");
+        println!("4. Ler arquivo");
         println!("0. Sair");
         stdout().flush()?;
         stdin().read_line(&mut buffer)?;
@@ -23,15 +26,13 @@ fn main() -> io::Result<()> {
 
         match option {
             "1" => {
-                if let Err(e) = add_person() {
-                    eprintln!("Error writing to file: {}", e);
-                }
+                let _ = add_person();
             }
             "0" => {
                 println!("Saindo...");
                 break;
             }
-            "3" => {
+            "4" => {
                 print_file(caminho.to_string())?;
             }
             "2" => {
@@ -41,6 +42,33 @@ fn main() -> io::Result<()> {
                 stdin().read_line(&mut buffer)?;
                 let cpf: String = buffer.trim().to_string();
                 find_person(caminho.to_string(), cpf)?;
+            }
+            "3" => {
+                let mut dados: Vec<String> = Vec::new();
+                let mut cont = 0;
+                println!("\nCaso haja dados que não deseja alterar, digite -1\n");
+
+                while cont < 2 {
+                    buffer.clear();
+                    match cont {
+                        0 => {
+                            println!("Digite o CPF: ");
+                            stdout().flush()?;
+                            stdin().read_line(&mut buffer)?;
+                            dados.push(buffer.trim().to_string());
+                        }
+                        1 => {
+                            println!("Digite o novo nome: ");
+                            stdout().flush()?;
+                            stdin().read_line(&mut buffer)?;
+                            dados.push(buffer.trim().to_string());
+                        }
+                        _ => {}
+                    }
+                    buffer.clear();
+                    cont += 1;
+                }
+                update_data(caminho.to_string(), dados)?;
             }
             _ => {
                 println!("Opção inválida, tente novamente.");
@@ -121,4 +149,45 @@ fn print_file(caminho: String) -> io::Result<()> {
         }
     }
     Ok(())
+}
+
+
+// Vector de strings para armazenar as informações, caso info "-1" não alterar
+fn update_data(caminho: String, novas_info: Vec<String>) -> io::Result<()> {
+    let file: File = OpenOptions::new().read(true).open(&caminho)?;
+    let mut temp_file: File = OpenOptions::new().write(true).create(true).open("output.tmp")?;
+    let reader = BufReader::new(file);
+    let mut cond: bool = false;
+
+    for line in reader.lines() {
+        match line {
+            Ok(_l) => {
+                let l = _l.trim();
+                if l.contains(novas_info[0].as_str()) {
+                    temp_file.write_all(b"\n\t")?;
+                    temp_file.write_all(l.as_bytes())?;
+                    cond = true;
+                }
+                if cond {
+                    if l == "}" {
+                        println!("");
+                        cond = false;
+                    }
+
+                    if l.contains("nome") {
+                        let nome: String = format!("\n\tnome: {{ {} }}\n}}\n", novas_info[1]);
+                        temp_file.write_all(nome.as_bytes())?;
+                    }
+                } else {
+                    temp_file.write_all(l.as_bytes())?;
+                }
+            } 
+            Err(e) => {
+                eprintln!("Error: {}", e);
+            }
+        }
+    }
+    rename("output.tmp", caminho)?;
+    Ok(())
+
 }
