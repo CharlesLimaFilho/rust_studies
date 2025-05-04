@@ -1,3 +1,4 @@
-nome: { Joao Costa },
-CPF: { 123.456.789-00 }nome: { Luiz Ramos },
-CPF: { 789.456.123-99 }
+{
+	CPF: { 123.456.789-77 },
+	nome: { Luiz }
+}
