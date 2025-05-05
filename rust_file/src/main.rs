@@ -19,6 +19,7 @@ fn main() -> io::Result<()> {
         println!("2. Buscar pessoa");
         println!("3. Alterar dados");
         println!("4. Ler arquivo");
+        println!("5. Remover pessoa");
         println!("0. Sair");
         stdout().flush()?;
         stdin().read_line(&mut buffer)?;
@@ -27,13 +28,6 @@ fn main() -> io::Result<()> {
         match option {
             "1" => {
                 let _ = add_person();
-            }
-            "0" => {
-                println!("Saindo...");
-                break;
-            }
-            "4" => {
-                print_file(caminho.to_string())?;
             }
             "2" => {
                 buffer.clear();
@@ -47,7 +41,7 @@ fn main() -> io::Result<()> {
                 let mut dados: Vec<String> = Vec::new();
                 let mut cont = 0;
                 println!("\nCaso haja dados que não deseja alterar, digite -1\n");
-
+                
                 while cont < 2 {
                     buffer.clear();
                     match cont {
@@ -69,6 +63,21 @@ fn main() -> io::Result<()> {
                     cont += 1;
                 }
                 update_data(caminho.to_string(), dados)?;
+            }
+            "4" => {
+                print_file(caminho.to_string())?;
+            }
+            "5"=> {
+                buffer.clear();
+                println!("Digite o CPF: ");
+                stdout().flush()?;
+                stdin().read_line(&mut buffer)?;
+                let cpf: String = buffer.trim().to_string();
+                remove_person(caminho.to_string(), cpf)?;
+            }
+            "0" => {
+                println!("Saindo...");
+                break;
             }
             _ => {
                 println!("Opção inválida, tente novamente.");
@@ -192,4 +201,43 @@ fn update_data(caminho: String, novas_info: Vec<String>) -> io::Result<()> {
     rename("output.tmp", caminho)?;
     Ok(())
 
+}
+
+fn remove_person(caminho: String, cpf: String) -> io::Result<()> {
+    let file: File = OpenOptions::new().read(true).open(&caminho)?;
+    let mut temp_file: File = OpenOptions::new().write(true).create(true).open("output.tmp")?;
+    let reader = BufReader::new(file);
+    let mut deve_remover: bool = false;
+    let mut hold: String = String::new();
+
+    for line in reader.lines() {
+        match line {
+            Ok(_l) => {
+                let l = _l.to_string();
+                if l == "{" && hold == "" {
+                    hold = l.clone();
+                } else if l.contains(cpf.as_str()) {
+                    deve_remover = true;
+                } else if deve_remover && l == "}" {
+                    deve_remover = false;
+                    hold = String::new();
+                } else if !deve_remover && hold != "" {
+                    temp_file.write_all(hold.as_bytes())?;
+                    temp_file.write_all(b"\n")?;
+                    hold = String::new();
+                    temp_file.write_all(l.as_bytes())?;
+                    temp_file.write_all(b"\n")?;
+                } else if !deve_remover {
+                    hold = String::new();
+                    temp_file.write_all(l.as_bytes())?;
+                    temp_file.write_all(b"\n")?;
+                }
+            } 
+            Err(e) => {
+                eprintln!("Error: {}", e);
+            }
+        }
+    }
+    rename("output.tmp", caminho)?;
+    Ok(())
 }
