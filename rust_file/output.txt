@@ -1,0 +1,40 @@
+{
+	CPF: { 789.456.123-77 }
+	Nome: { Alberto }
+	Endereço: { Rua 1 }
+	Salário: { R$ 500,00 }
+	Sexo: { M }
+	Data de Nascimento: { 20/05/2007 }
+	Departamento: { 1 }
+	Projetos: { 101, 102 }
+}
+{
+	CPF: { 245.631.753-55 }
+	Nome: { Geraldo }
+	Endereço: { Rua 2 }
+	Salário: { R$ 60.000,00 }
+	Sexo: { M }
+	Data de Nascimento: { 15/12/1974 }
+	Departamento: { 2 }
+	Projetos: { 103 }
+}
+{
+	CPF: { 346.879.874-64 }
+	Nome: { Ryan }
+	Endereço: { Rua 3 }
+	Salário: { R$ 5.000,00 }
+	Sexo: { M }
+	Data de Nascimento: { 22/09/2002 }
+	Departamento: { 3 }
+	Projetos: { 101, 103 }
+}
+{
+	CPF: { 549.848.949-80 }
+	Nome: { Roberta }
+	Endereço: { Rua 4 }
+	Salário: { R$ 6.325,73 }
+	Sexo: { F }
+	Data de Nascimento: { 20/05/2005 }
+	Departamento: { 1 }
+	Projetos: { 102, 103 }
+}

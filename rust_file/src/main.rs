@@ -11,6 +11,7 @@ fn main() -> io::Result<()> {
     let mut option: &str;
     let mut buffer: String = String::new();
     let caminho: String = "output.txt".to_string();
+    let array = ["CPF", "Nome", "Endereço", "Salário", "Sexo", "Data de nascimento", "Departamento", "Projetos"];
 
     loop {
         buffer.clear();
@@ -27,7 +28,17 @@ fn main() -> io::Result<()> {
 
         match option {
             "1" => {
-                let _ = add_person();
+                buffer.clear();
+                let mut dados: Vec<String> = Vec::new();
+
+                for i in 0..array.len() {
+                    buffer.clear();
+                    println!("Digite o {}: ", array[i]);
+                    stdout().flush()?;
+                    stdin().read_line(&mut buffer)?;
+                    dados.push(buffer.trim().to_string());
+                }
+                let _ = add_person(caminho.to_string(), dados);
             }
             "2" => {
                 buffer.clear();
@@ -39,30 +50,16 @@ fn main() -> io::Result<()> {
             }
             "3" => {
                 let mut dados: Vec<String> = Vec::new();
-                let mut cont = 0;
                 println!("\nCaso haja dados que não deseja alterar, digite -1\n");
                 
-                while cont < 2 {
+                for i in 0..array.len() {
                     buffer.clear();
-                    match cont {
-                        0 => {
-                            println!("Digite o CPF: ");
-                            stdout().flush()?;
-                            stdin().read_line(&mut buffer)?;
-                            dados.push(buffer.trim().to_string());
-                        }
-                        1 => {
-                            println!("Digite o novo nome: ");
-                            stdout().flush()?;
-                            stdin().read_line(&mut buffer)?;
-                            dados.push(buffer.trim().to_string());
-                        }
-                        _ => {}
-                    }
-                    buffer.clear();
-                    cont += 1;
+                    println!("Digite o {}: ", array[i]);
+                    stdout().flush()?;
+                    stdin().read_line(&mut buffer)?;
+                    dados.push(buffer.trim().to_string());
                 }
-                update_data(caminho.to_string(), dados)?;
+                update_data(caminho.to_string(), dados, array)?;
             }
             "4" => {
                 print_file(caminho.to_string())?;
@@ -87,24 +84,14 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn add_person() -> io::Result<()> {
-    let mut buffer: String = String::new();
-    let mut file: File = OpenOptions::new().create(true).append(true).open("output.txt")?;
-
-    println!("Digite o nome: ");
-    stdout().flush()?;
-    stdin().read_line(&mut buffer)?;
-    let name: String = buffer.trim().to_string();
-    buffer.clear();
-
-    println!("Digite o CPF: ");
-    stdout().flush()?;
-    stdin().read_line(&mut buffer)?;
-    let cpf: String = buffer.trim().to_string();
-    buffer.clear();
+fn add_person(caminho: String, dados: Vec<String>) -> io::Result<()> {
+    let mut file: File = OpenOptions::new().create(true).append(true).open(&caminho)?;
+    
 
 
-    let message: String = format!("{{\n\tCPF: {{ {} }},\n\tnome: {{ {} }}\n}}\n", cpf, name);
+    let message: String = format!("{{\n\tCPF: {{ {} }}\n\tNome: {{ {} }}\n\tEndereço: {{ {} }}\n", dados[0], dados[1], dados[2]);
+    let message: String = format!("{}\tSalário: {{ R$ {} }}\n\tSexo: {{ {} }}\n\tData de Nascimento: {{ {} }}\n", message, dados[3], dados[4], dados[5]);
+    let message: String = format!("{}\tDepartamento: {{ {} }}\n\tProjetos: {{ {} }}\n}}\n", message, dados[6], dados[7]);
 
 
     file.write_all(message.as_bytes())?;
@@ -150,7 +137,12 @@ fn print_file(caminho: String) -> io::Result<()> {
         match line {
             Ok(_l) => {
                 let l = _l.trim();
-                println!("{}", l);
+                if l == "}" || l == "{" {
+                    println!("");
+                } else {
+                    println!("{}", l);
+                }
+                
             } 
             Err(e) => {
                 eprintln!("Error: {}", e);
@@ -162,35 +154,42 @@ fn print_file(caminho: String) -> io::Result<()> {
 
 
 // Vector de strings para armazenar as informações, caso info "-1" não alterar
-fn update_data(caminho: String, novas_info: Vec<String>) -> io::Result<()> {
+fn update_data(caminho: String, novas_info: Vec<String>, texto: [&'static str; 8]) -> io::Result<()> {
     let file: File = OpenOptions::new().read(true).open(&caminho)?;
     let mut temp_file: File = OpenOptions::new().write(true).create(true).open("output.tmp")?;
     let reader = BufReader::new(file);
-    let mut cond: bool = false;
+    let mut message: String = String::new();
+    let mut deve_alterar: bool = false;
+    let mut cont = 0;
 
     for line in reader.lines() {
         match line {
             Ok(_l) => {
                 let l = _l.to_string();
                 if l.contains(novas_info[0].as_str()) {
-                    temp_file.write_all(l.as_bytes())?;
-                    cond = true;
+                    deve_alterar = true;
+                    cont = 0;
                 }
-                if cond {
+                if deve_alterar && (l == "}" || novas_info[cont] != "-1") {
                     if l == "}" {
                         temp_file.write_all(l.as_bytes())?;
                         temp_file.write_all(b"\n")?;
                         println!("");
-                        cond = false;
-                    }
-
-                    if l.contains("nome") {
-                        let nome: String = format!("\n\tnome: {{ {} }}\n", novas_info[1]);
-                        temp_file.write_all(nome.as_bytes())?;
+                        deve_alterar = false;
+                        cont = 0;
+                    } else {
+                        if l.contains("Salário:") {
+                            message = format!("\t{}: {{ R$ {} }}\n", texto[cont], novas_info[cont]);
+                        } else {
+                            message = format!("\t{}: {{ {} }}\n", texto[cont], novas_info[cont]);
+                        }
+                        temp_file.write_all(message.as_bytes())?;
+                        cont += 1;
                     }
                 } else {
                     temp_file.write_all(l.as_bytes())?;
                     temp_file.write_all(b"\n")?;
+                    cont += 1;
                 }
             } 
             Err(e) => {
