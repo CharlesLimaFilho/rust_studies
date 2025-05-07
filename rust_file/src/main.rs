@@ -46,7 +46,8 @@ fn main() -> io::Result<()> {
                 stdout().flush()?;
                 stdin().read_line(&mut buffer)?;
                 let cpf: String = buffer.trim().to_string();
-                find_person(caminho.to_string(), cpf)?;
+                let pessoa: String = find_person(caminho.to_string(), cpf);
+                println!("{}\n", pessoa);
             }
             "3" => {
                 let mut dados: Vec<String> = Vec::new();
@@ -99,10 +100,11 @@ fn add_person(caminho: String, dados: Vec<String>) -> io::Result<()> {
     Ok(())
 }
 
-fn find_person(caminho: String, cpf: String) -> io::Result<()> {
-    let file: File = OpenOptions::new().read(true).open(caminho)?;
+fn find_person(caminho: String, cpf: String) -> String {
+    let file: File = OpenOptions::new().read(true).open(&caminho).unwrap();
     let reader = BufReader::new(file);
     let mut cond: bool = false;
+    let mut pessoa: String = String::new();
 
     for line in reader.lines() {
         match line {
@@ -111,22 +113,20 @@ fn find_person(caminho: String, cpf: String) -> io::Result<()> {
                 if l.contains(cpf.as_str()) || cond {
                     if l == "}" {
                         println!("");
-                        return Ok(());
+                        return pessoa;
                     }
 
                     if !cond { println!("") };
-                    println!("{}", l);
+                    pessoa = format!("{}\t\n{}", pessoa, l);
                     cond = true;
                 }
             } 
             Err(e) => {
                 eprintln!("Error: {}", e);
-                return Err(e);
             }
         }
     }
-    println!("Não encontrado");
-    return Ok(());
+    return "Não encontrado".to_string();
 }
 
 fn print_file(caminho: String) -> io::Result<()> {
