@@ -87,8 +87,12 @@ fn main() -> io::Result<()> {
 
 fn add_person(caminho: String, dados: Vec<String>) -> io::Result<()> {
     let mut file: File = OpenOptions::new().create(true).append(true).open(&caminho)?;
-    
 
+    
+    if find_person(caminho, dados[0].clone()) != "Não encontrado" {
+        println!("Pessoa já existe.");
+        return Ok(());
+    }
 
     let message: String = format!("{{\n\tCPF: {{ {} }}\n\tNome: {{ {} }}\n\tEndereço: {{ {} }}\n", dados[0], dados[1], dados[2]);
     let message: String = format!("{}\tSalário: {{ R$ {} }}\n\tSexo: {{ {} }}\n\tData de Nascimento: {{ {} }}\n", message, dados[3], dados[4], dados[5]);
