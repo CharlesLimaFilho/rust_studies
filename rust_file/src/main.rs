@@ -2,7 +2,7 @@ use std::fs::rename;
 use std::io::prelude::*;
 use std::fs::File;
 use std::fs::OpenOptions;
-use std::io::{self, Write}; // Write has write_all()
+use std::io::{self, Write};
 use std::io::stdin;
 use std::io::stdout;
 use std::io::BufReader;
