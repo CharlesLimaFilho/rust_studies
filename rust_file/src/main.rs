@@ -96,7 +96,7 @@ fn add_person(caminho: String, dados: Vec<String>) -> io::Result<()> {
 
 
     file.write_all(message.as_bytes())?;
-    println!("Pessoa adicionada.");
+    println!("Pessoa adicionada.\n");
     Ok(())
 }
 
@@ -186,13 +186,12 @@ fn update_data(caminho: String, novas_info: Vec<String>, texto: [&'static str; 8
                             message = format!("\t{}: {{ {} }}\n", texto[cont], novas_info[cont]);
                         }
                         temp_file.write_all(message.as_bytes())?;
-                        cont += 1;
                     }
                 } else {
                     temp_file.write_all(l.as_bytes())?;
                     temp_file.write_all(b"\n")?;
-                    cont += 1;
                 }
+                cont += 1;
             } 
             Err(e) => {
                 eprintln!("Error: {}", e);
