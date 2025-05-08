@@ -11,7 +11,7 @@ fn main() -> io::Result<()> {
     let mut option: &str;
     let mut buffer: String = String::new();
     let caminho: String = "output.txt".to_string();
-    let array = ["CPF", "Nome", "Endereço", "Salário", "Sexo", "Data de nascimento", "Departamento", "Projetos"];
+    let array: [&'static str; 8] = ["CPF", "Nome", "Endereço", "Salário", "Sexo", "Data de nascimento", "Departamento", "Projetos"];
 
     loop {
         buffer.clear();
@@ -102,15 +102,16 @@ fn add_person(caminho: String, dados: Vec<String>) -> io::Result<()> {
 
 fn find_person(caminho: String, cpf: String) -> String {
     let file: File = OpenOptions::new().read(true).open(&caminho).unwrap();
-    let reader = BufReader::new(file);
+    let reader: BufReader<File> = BufReader::new(file);
     let mut cond: bool = false;
     let mut pessoa: String = String::new();
+    let encontrar_cpf: String = format!("CPF: {{ {} }}", cpf); 
 
     for line in reader.lines() {
         match line {
             Ok(_l) => {
                 let l = _l.trim();
-                if l.contains(cpf.as_str()) || cond {
+                if l.contains(encontrar_cpf.as_str()) || cond {
                     if l == "}" {
                         println!("");
                         return pessoa;
@@ -131,7 +132,7 @@ fn find_person(caminho: String, cpf: String) -> String {
 
 fn print_file(caminho: String) -> io::Result<()> {
     let file: File = OpenOptions::new().read(true).open(caminho)?;
-    let reader = BufReader::new(file);
+    let reader: BufReader<File> = BufReader::new(file);
 
     for line in reader.lines() {
         match line {
@@ -157,8 +158,9 @@ fn print_file(caminho: String) -> io::Result<()> {
 fn update_data(caminho: String, novas_info: Vec<String>, texto: [&'static str; 8]) -> io::Result<()> {
     let file: File = OpenOptions::new().read(true).open(&caminho)?;
     let mut temp_file: File = OpenOptions::new().write(true).create(true).open("output.tmp")?;
-    let reader = BufReader::new(file);
-    let mut message: String = String::new();
+    let reader: BufReader<File> = BufReader::new(file);
+    let mut message: String;
+    let encontrar_cpf: String = format!("CPF: {{ {} }}", novas_info[0]);
     let mut deve_alterar: bool = false;
     let mut cont = 0;
 
@@ -166,7 +168,7 @@ fn update_data(caminho: String, novas_info: Vec<String>, texto: [&'static str; 8
         match line {
             Ok(_l) => {
                 let l = _l.to_string();
-                if l.contains(novas_info[0].as_str()) {
+                if l.contains(encontrar_cpf.as_str()) {
                     deve_alterar = true;
                     cont = 0;
                 }
@@ -205,9 +207,10 @@ fn update_data(caminho: String, novas_info: Vec<String>, texto: [&'static str; 8
 fn remove_person(caminho: String, cpf: String) -> io::Result<()> {
     let file: File = OpenOptions::new().read(true).open(&caminho)?;
     let mut temp_file: File = OpenOptions::new().write(true).create(true).open("output.tmp")?;
-    let reader = BufReader::new(file);
+    let reader: BufReader<File> = BufReader::new(file);
     let mut deve_remover: bool = false;
     let mut hold: String = String::new();
+    let encontrar_cpf: String = format!("CPF: {{ {} }}", cpf);
 
     for line in reader.lines() {
         match line {
@@ -215,7 +218,7 @@ fn remove_person(caminho: String, cpf: String) -> io::Result<()> {
                 let l = _l.to_string();
                 if l == "{" && hold == "" {
                     hold = l.clone();
-                } else if l.contains(cpf.as_str()) {
+                } else if l.contains(encontrar_cpf.as_str()) {
                     deve_remover = true;
                 } else if deve_remover && l == "}" {
                     deve_remover = false;
